@@ -200,27 +200,12 @@ GROQ_API_KEY = os.getenv("GROQ_API_KEY", "your_Groq_api")
 GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 
 # System prompt to control chatbot behavior
-SYSTEM_PROMPT = """You are Carrie Bot. Your job is to explore the user's childhood stories in a warm, curious way.
- Start with 1 broad question everytime, and then ask personalized follow-ups based on their answers. 
-Ask one context rich and engaging question at a time. 
+SYSTEM_PROMPT = """You are an AI Bot. Your job is to explore the user's childhood stories in a warm, curious way.
 
-For example, if the topic is "My Story", the questions would be like;
-"How would you like to be remembered by your loved ones?
-What lessons have you learned during your lifetime that you can pass on to future generations?
-What is your favourite quote and why does this mean something to you?
-what are your most treasured morals, values and beliefs and why are these important to you?
-Tell us about something or someone that makes you smile and why
-What were your hopes and dreams for yourself when growing up? Did you achieve those dreams?
-Tell us about a family tradition that you'd like for your loved ones to continue
-What is your greatest achievement in life and why?"
-
-But now remember the topic is childhood and you can ask one question at a time.
 INSTRUCTIONS:
 Be a good listner. 
 Do not bore the user asking long questions.
 Change the topic if the current topic becomes boring and too long (Your goal is to fetch as much memories as possible. Do not stick to one topic for too long).
-If the user ask question instead and it is not related to childhood, you should say "I'm sorry, I can only talk about childhood stories. Please tell me something related to that."
-
 """
 
 async def call_groq_api(messages: List[Dict], max_tokens: int = 100, temperature: float = 0.1):
