@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A320 Family Chatbot</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.309.0/lucide.min.css" rel="stylesheet">
+    <style>
+        /* Previous styles remain the same */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+            /* Prevent body from scrolling */
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 260px;
+            /* Fixed width */
+            background-color: #030303;
+            color: white;
+            padding: 20px;
+            position: fixed;
+            /* Changed from sticky to fixed */
+            top: 0;
+            left: 0;
+            bottom: 0;
+            overflow-y: auto;
+            /* Allow sidebar to scroll if content exceeds height */
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 20;
+            /* Ensure sidebar stays on top */
+        }
+
+        .new-chat-btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+        }
+
+        .model-selector {
+            background-color: #2d2d2d;
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 10px;
+        }
+
+        .model-selector h3 {
+            margin: 0 0 8px 0;
+            font-size: 14px;
+            color: #888;
+        }
+
+        .model-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .model-option.selected {
+            background-color: #404040;
+        }
+
+        /* Main Content Styles */
+        .main-content {
+            flex-grow: 1;
+            margin-left: 300px;
+            /* Match sidebar width */
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            /* Prevent main content from scrolling */
+        }
+
+        .chat-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: white;
+            overflow: hidden;
+            /* Prevent chat container from scrolling */
+        }
+
+        .chat-header {
+            padding: 16px 24px;
+            background-color: white;
+            border-bottom: 1.5px solid #acabab;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .chat-header h1 {
+            margin: 0.00;
+            font-size: 2.0rem;
+            color: #000;
+        }
+
+        .chat-messages {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            position: relative;
+        }
+
+        .message .timestamp {
+            font-size: 0.7rem;
+            color: #666;
+            position: absolute;
+            bottom: -18px;
+        }
+
+        .user-message {
+            background-color: #4CAF50;
+            color: white;
+            align-self: flex-end;
+        }
+
+        .user-message .timestamp {
+            right: 4px;
+        }
+
+        .ai-message {
+            background-color: #f0f0f0;
+            color: black;
+            align-self: flex-start;
+        }
+
+        .ai-message .timestamp {
+            left: 4px;
+        }
+
+        .sources {
+            font-size: 0.8em;
+            margin-top: 8px;
+            color: #666;
+            border-top: 1px solid #ddd;
+            padding-top: 8px;
+        }
+
+        .input-container {
+            padding: 20px;
+            background-color: white;
+            border-top: 1px solid #ddd;
+            display: flex;
+            gap: 10px;
+            position: sticky;
+            bottom: 0;
+        }
+
+        #query-input {
+            flex-grow: 1;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            outline: none;
+            font-size: 14px;
+        }
+
+        #submit-btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        #submit-btn:hover {
+            background-color: #45a049;
+        }
+
+        .typing-indicator {
+            display: none;
+            padding: 12px 16px;
+            background-color: #f0f0f0;
+            border-radius: 12px;
+            align-self: flex-start;
+            color: #666;
+            font-style: italic;
+        }
+
+        .typing-indicator span {
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .chat-history {
+            margin-top: 20px;
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+        }
+
+        .history-item:hover {
+            background-color: #2d2d2d;
+        }
+
+        .history-item.active {
+            background-color: #404040;
+        }
+
+        .history-item-title {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex-grow: 1;
+        }
+
+        .delete-chat {
+            opacity: 0;
+            transition: opacity 0.2s;
+            background: none;
+            border: none;
+            color: #ff4444;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+        }
+
+        .history-item:hover .delete-chat {
+            opacity: 1;
+        }
+
+        .delete-chat:hover {
+            background-color: rgba(255, 68, 68, 0.1);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Previous HTML remains the same until the script tag -->
+    <div class="sidebar">
+        <button class="new-chat-btn">
+            <span>＋</span> New Chat
+        </button>
+
+        <div class="model-selector">
+            <h3>Model</h3>
+            <div class="model-option selected">
+                <span>●</span> Meta-Llama-3.1-8B
+            </div>
+        </div>
+
+        <div class="chat-history" id="chat-history">
+            <!-- Chat history items will be inserted here -->
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="chat-container">
+            <div class="chat-header">
+                <h1>AI A320 Family Chat Assistant</h1>
+            </div>
+
+            <div class="chat-messages" id="chat-messages">
+                <div class="message ai-message">
+                    Hello! I'm your AI assistant. How can I help you today?
+                    <div class="timestamp">Today, just now</div>
+                </div>
+            </div>
+
+            <div class="typing-indicator" id="typing-indicator">
+                AI is thinking<span>...</span>
+            </div>
+
+            <div class="input-container">
+                <input type="text" id="query-input" placeholder="Type your message..." autocomplete="off">
+                <button id="submit-btn">
+                    Send
+                    <span>→</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const queryInput = document.getElementById('query-input');
+            const submitBtn = document.getElementById('submit-btn');
+            const chatMessages = document.getElementById('chat-messages');
+            const typingIndicator = document.getElementById('typing-indicator');
+            const chatHistory = document.getElementById('chat-history');
+            const BACKEND_URL = 'http://localhost:8000';
+
+            // Chat management
+            let chats = JSON.parse(localStorage.getItem('chats')) || {};
+            let currentChatId = localStorage.getItem('currentChatId');
+
+            // Initialize if no chats exist or current chat is invalid
+            if (Object.keys(chats).length === 0 || !currentChatId || !chats[currentChatId]) {
+                createNewChat();
+            }
+
+            function createNewChat() {
+                currentChatId = Date.now().toString();
+                chats[currentChatId] = {
+                    title: 'New Chat',
+                    messages: [{
+                        content: "Hello! I'm your AI assistant. How can I help you today?",
+                        isUser: false,
+                        timestamp: new Date().toISOString(),
+                        sources: null
+                    }]
+                };
+                localStorage.setItem('currentChatId', currentChatId);
+                saveChats();
+                return currentChatId;
+            }
+
+            function saveChats() {
+                localStorage.setItem('chats', JSON.stringify(chats));
+                localStorage.setItem('currentChatId', currentChatId);
+                updateChatHistory();
+            }
+
+            function deleteChat(chatId, event) {
+                event.stopPropagation(); // Prevent chat selection when deleting
+
+                if (Object.keys(chats).length === 1) {
+                    // If this is the last chat, create a new one first
+                    createNewChat();
+                }
+
+                delete chats[chatId];
+                if (chatId === currentChatId) {
+                    // If current chat was deleted, switch to the most recent chat
+                    currentChatId = Object.keys(chats)[0];
+                    loadChat(currentChatId);
+                }
+
+                saveChats();
+            }
+
+            function updateChatHistory() {
+                chatHistory.innerHTML = '';
+                Object.entries(chats).reverse().forEach(([id, chat]) => {
+                    const historyItem = document.createElement('div');
+                    historyItem.className = `history-item ${id === currentChatId ? 'active' : ''}`;
+                    historyItem.innerHTML = `
+                        <span>💬</span>
+                        <span class="history-item-title">${chat.title}</span>
+                        <button class="delete-chat" title="Delete chat">🗑️</button>
+                    `;
+
+                    // Add click handler for chat selection
+                    historyItem.addEventListener('click', () => loadChat(id));
+
+                    // Add click handler for delete button
+                    const deleteBtn = historyItem.querySelector('.delete-chat');
+                    deleteBtn.addEventListener('click', (e) => deleteChat(id, e));
+
+                    chatHistory.appendChild(historyItem);
+                });
+            }
+
+            function loadChat(chatId) {
+                currentChatId = chatId;
+                localStorage.setItem('currentChatId', currentChatId);
+                chatMessages.innerHTML = '';
+                chats[chatId].messages.forEach(msg => {
+                    addMessage(msg.content, msg.isUser, msg.sources, msg.timestamp);
+                });
+                updateChatHistory();
+            }
+
+            function getFormattedTime(timestamp = null) {
+                const date = timestamp ? new Date(timestamp) : new Date();
+                const hours = date.getHours().toString().padStart(2, '0');
+                const minutes = date.getMinutes().toString().padStart(2, '0');
+                return `${hours}:${minutes}`;
+            }
+
+            function addMessage(content, isUser, sources = null, timestamp = null) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${isUser ? 'user-message' : 'ai-message'}`;
+                messageDiv.textContent = content;
+
+                const timestampDiv = document.createElement('div');
+                timestampDiv.className = 'timestamp';
+                timestampDiv.textContent = getFormattedTime(timestamp);
+                messageDiv.appendChild(timestampDiv);
+
+                if (sources && sources.length > 0) {
+                    const sourcesDiv = document.createElement('div');
+                    sourcesDiv.className = 'sources';
+                    sourcesDiv.innerHTML = '<strong>Sources:</strong> ' + sources.join(', ');
+                    messageDiv.appendChild(sourcesDiv);
+                }
+
+                chatMessages.appendChild(messageDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+
+                // Save message to current chat
+                if (!timestamp) { // Only save if it's a new message
+                    chats[currentChatId].messages.push({
+                        content,
+                        isUser,
+                        timestamp: new Date().toISOString(),
+                        sources
+                    });
+
+                    // Update chat title with first user message if it's still "New Chat"
+                    if (isUser && chats[currentChatId].title === 'New Chat') {
+                        chats[currentChatId].title = content.slice(0, 30) + (content.length > 30 ? '...' : '');
+                    }
+
+                    saveChats();
+                }
+            }
+
+            submitBtn.addEventListener('click', async () => {
+                const query = queryInput.value.trim();
+
+                if (!query) {
+                    return;
+                }
+
+                addMessage(query, true);
+                queryInput.value = '';
+
+                typingIndicator.style.display = 'block';
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+
+                try {
+                    const response = await fetch(`${BACKEND_URL}/rag/query`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            query: query,
+                            max_tokens: 256,
+                            temperature: 0.1
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+
+                    const data = await response.json();
+                    typingIndicator.style.display = 'none';
+                    addMessage(data.answer, false, data.sources);
+
+                } catch (error) {
+                    console.error('Error:', error);
+                    typingIndicator.style.display = 'none';
+                    addMessage('I apologize, but I encountered an error. Please try again.', false);
+                }
+            });
+
+            queryInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    submitBtn.click();
+                }
+            });
+
+
+            document.querySelector('.new-chat-btn').addEventListener('click', () => {
+                createNewChat();
+                loadChat(currentChatId);
+                queryInput.focus();
+            });
+
+            // Initial load
+            updateChatHistory();
+            loadChat(currentChatId);
+        });
+    </script>
+</body>
+
+</html>
