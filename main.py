@@ -196,7 +196,7 @@ app.add_middleware(
 db_manager = DatabaseManager()
 
 # Groq API configuration
-GROQ_API_KEY = os.getenv("GROQ_API_KEY", "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")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY", "your_Groq_api")
 GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 
 # System prompt to control chatbot behavior
