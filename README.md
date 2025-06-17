@@ -13,7 +13,9 @@ This repository contains the frontend files, main script, and requirements for a
 1. Clone the repository.
 2. Navigate to the project directory.
 3. Install the dependencies using `pip install -r requirements.txt`.
-4. Run the `main.py` script to start the chatbot.
+4. Add your Groq Api key.
+5. Change the system prompt if required
+6. Run the `main.py` script to start the chatbot.
 
 ## Usage
 
